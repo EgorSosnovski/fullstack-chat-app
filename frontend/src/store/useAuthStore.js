@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
-import axios from "axios";
 import { io, Socket } from "socket.io-client";
 
 const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
@@ -12,6 +11,8 @@ export const useAuthStore = create((set, get) => ({
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
+  isLoading: false,
+  message: null,
   onlineUsers: [],
   socket: null,
 
@@ -71,6 +72,34 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       toast.error(error.response.data.message);
     }
+  },
+
+  forgotPassword: async (email) => {
+    set({ isLoading: true, error: null });
+		try {
+			const response = await axiosInstance.post(`/auth/forgot-password`,  {email} );
+			set({ message: response.data.message, isLoading: false });
+		} catch (error) {
+			set({
+				isLoading: false,
+				error: "Error sending reset password email",
+			});
+			throw error;
+		}
+  },
+
+    resetPassword: async (token, password) => {
+    set({ isLoading: true, error: null });
+		try {
+			const response = await axiosInstance.post(`/auth/reset-password/${token}`,  {password} );
+			set({ message: response.data.message, isLoading: false });
+		} catch (error) {
+			set({
+				isLoading: false,
+				error: "Error reseting email",
+			});
+			throw error;
+		}
   },
 
   updateProfile: async(data) => {
